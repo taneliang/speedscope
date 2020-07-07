@@ -5,7 +5,7 @@ import {chromeTreeToNodes, OldCPUProfile} from './v8cpuFormatter'
 
 // See: https://github.com/v8/v8/blob/master/src/inspector/js_protocol.json
 
-interface TimelineEvent {
+export interface TimelineEvent {
   pid: number
   tid: number
   ts: number
