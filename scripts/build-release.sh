@@ -3,6 +3,7 @@
 set -euxo pipefail
 
 OUTDIR=`pwd`/dist/release
+OUTDIR_LIBRARY=`pwd`/dist/library
 
 # Typecheck
 node_modules/.bin/tsc --noEmit
@@ -24,3 +25,15 @@ node scripts/generate-file-format-schema-json.js > "$OUTDIR"/file-format-schema.
 
 # Build the compiled assets
 node_modules/.bin/parcel build assets/index.html --no-cache --out-dir "$OUTDIR" --public-url "./" --detailed-report
+
+# Clean out the library release directory
+rm -rf "$OUTDIR_LIBRARY"
+mkdir -p "$OUTDIR_LIBRARY"
+
+# Build library
+node_modules/.bin/tsc --project tsconfig.dist-lib.json --outDir "$OUTDIR_LIBRARY"
+
+# Generate Flow definition files
+for i in $(find ${OUTDIR_LIBRARY} -type f -name "*.d.ts");
+  do flowgen $i -o ${i%.*.*}.js.flow --add-flow-header --no-inexact;
+done;
