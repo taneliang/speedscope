@@ -124,7 +124,8 @@ export namespace FileFormat {
     CLOSE_FRAME = 'C',
   }
 
-  interface IEvent {
+  // Exported to fix flowgen types
+  export interface IEvent {
     type: EventType
     at: number
   }

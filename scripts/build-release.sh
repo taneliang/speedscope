@@ -37,3 +37,15 @@ node_modules/.bin/tsc --project tsconfig.dist-lib.json --outDir "$OUTDIR_LIBRARY
 for i in $(find ${OUTDIR_LIBRARY} -type f -name "*.d.ts");
   do flowgen $i -o ${i%.*.*}.js.flow --add-flow-header --no-inexact;
 done;
+
+# Fix generated Flow definitions. These cannot be fixed by modifying the original source, so we do regex codemods instead. May be brittle.
+# FileFormat is a namespace and is imported wrongly. All known use cases only use FileFormat.ValueUnit, so we just import that directly.
+sed -i 's/^import { FileFormat } from "\.\/file-format-spec";$/import type { FileFormat\$ValueUnit } from "\.\/file-format-spec";/' ${OUTDIR_LIBRARY}/lib/*.js.flow;
+# Some formatters declare a more specific type for the `unit` property, so it needs to be covariant.
+sed -i 's/unit: FileFormat\$ValueUnit;/+unit: FileFormat\$ValueUnit;/' ${OUTDIR_LIBRARY}/lib/value-formatters.js.flow;
+# ValueFormatter interface cannot be mixed in.
+sed -i 's/ mixins ValueFormatter/ implements ValueFormatter/g' ${OUTDIR_LIBRARY}/lib/value-formatters.js.flow;
+# Iterable interface cannot be mixed in.
+sed -i 's/ mixins Iterable/ implements Iterable/g' ${OUTDIR_LIBRARY}/lib/utils.js.flow;
+# Flow does not distinguish between Iterator and IterableIterator
+sed -i 's/IterableIterator/Iterator/g' ${OUTDIR_LIBRARY}/lib/utils.js.flow;
